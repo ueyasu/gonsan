@@ -37,9 +37,15 @@ go build gonsan.go
   - `gonsan -s 100` -> sampling 1/100
   - default 1
 
+example
+
+```sh
+gonsan -i eth0 -f tcp -s 10
+```
+
 ## Json
 
-- time"
+- time
   - string
   - example - `"2017-11-09 00:35:09.32589 +0900 JST"`
 - epoch_time
