@@ -69,11 +69,6 @@ gonsan -i eth0 -f tcp -s 10
 - tcp_flags
   - *not impremented*
 
-## Feature
-
-- view TCP flags
-- select Aggregate
-
 ## What you really needs
 
 - NetFlow
