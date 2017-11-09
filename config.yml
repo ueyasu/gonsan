@@ -1,0 +1,9 @@
+input:
+  # set read interface
+  device: "eth0"
+filter:
+  # set BPF filter
+  bpf_filter: ""
+  # samling rate
+  sampling_rate: 1
+  

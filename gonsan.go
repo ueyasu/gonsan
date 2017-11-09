@@ -4,15 +4,36 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"strconv"
 
 	"encoding/json"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pfring"
 )
+
+type config struct {
+	Input  inputConfig  `yaml:"input"`
+	Filter filterConfig `yaml:"filter"`
+	Output outputConfig `yaml:"output"`
+}
+
+type inputConfig struct {
+	Device string `yaml:"device"`
+}
+
+type filterConfig struct {
+	BpfFilter    string `yaml:"bpf_filter"`
+	SamplingRate int    `yaml:"sampling_rate"`
+}
+
+type outputConfig struct {
+}
 
 type packetInfo struct {
 	Time      string `json:"time"`
@@ -77,19 +98,41 @@ func view(p packetInfo) {
 	fmt.Println(p.String())
 }
 
+func openConfig(path *string) (config, error) {
+	var c config
+	buf, err := ioutil.ReadFile(*path)
+	if err != nil {
+		return c, err
+	}
+	err = yaml.Unmarshal(buf, &c)
+	return c, err
+}
+
 func main() {
-	filter := flag.String("f", "", "BPF filter")
+	configPath := flag.String("f", "", "config file")
 	device := flag.String("i", "", "interface")
 	samplingRate := flag.Int("s", 1, "sampling rate")
 	flag.Parse()
 
-	if *device == "" {
+	var (
+		conf config
+		err  error
+	)
+	if *configPath != "" {
+		if conf, err = openConfig(configPath); err != nil {
+			log.Fatal(err)
+		}
+		conf.Input.Device = *device
+		conf.Filter.SamplingRate = *samplingRate
+	}
+	if conf.Input.Device == "" {
 		log.Fatal(errors.New("set interface"))
 	}
 
-	if ring, err := pfring.NewRing(*device, 65536, pfring.FlagPromisc); err != nil {
+	if ring, err := pfring.NewRing(conf.Input.Device, 65536, pfring.FlagPromisc); err != nil {
+		log.Println("Infomarion: check Permission")
 		log.Fatal(err)
-	} else if err := ring.SetBPFFilter(*filter); err != nil {
+	} else if err := ring.SetBPFFilter(conf.Filter.BpfFilter); err != nil {
 		log.Fatal(err)
 	} else if err := ring.SetSamplingRate(*samplingRate); err != nil {
 		log.Fatal(err)

@@ -29,18 +29,31 @@ go build gonsan.go
 - **-i**
   - interface
 - **-f**
-  - BPF filter
-  - optional
+  - config file path
 - **-s**
   - sampling rate
-  - optional
   - `gonsan -s 100` -> sampling 1/100
   - default 1
+
+#### config file
+
+argument (-i, -s) overrides config.
+
+````yaml
+input:
+  # set read interface
+  device: "eth0"
+filter:
+  # set BPF filter
+  bpf_filter: ""
+  # samling rate
+  sampling_rate: 1
+````
 
 example
 
 ```sh
-gonsan -i eth0 -f tcp -s 10
+gonsan -f config.yml -i eth0 -s 10
 ```
 
 ## Json
