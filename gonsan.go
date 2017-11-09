@@ -122,7 +122,11 @@ func main() {
 		if conf, err = openConfig(configPath); err != nil {
 			log.Fatal(err)
 		}
+	}
+	if *device != "" {
 		conf.Input.Device = *device
+	}
+	if conf.Filter.SamplingRate < *samplingRate {
 		conf.Filter.SamplingRate = *samplingRate
 	}
 	if conf.Input.Device == "" {
