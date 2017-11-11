@@ -4,8 +4,20 @@ Gonsan is packet analyzer to output json.
 
 ## Getting Started
 
-1. Install [libpfring](https://github.com/ntop/PF_RING)
-1. Build
+### 1. Install libpfring
+
+Install [libpfring](https://github.com/ntop/PF_RING)
+
+### 2. Build
+
+```sh
+go get "github.com/google/gopacket"
+go get "gopkg.in/yaml.v2"
+go build gonsan.go
+```
+
+### 3. Run
+
 1. Run `sudo ./gonsan -i eth0` (read eth0 interface)
 1. You can see json
 
@@ -15,19 +27,23 @@ json example
 {"time":"2017-11-11 16:28:34.966029 +0900 JST","epoch_time":1510385314,"length":248,"src_mac":"00:15:5d:00:07:00","dst_mac":"00:15:5d:00:07:01","src_ip":"192.168.0.1","dst_ip":"192.168.0.2","src_port":42086,"dst_port":443,"proto":"TCP","seq_num":1709215608,"tcp_flags":{"FIN":false,"SYN":false,"RST":false,"PSH":true,"ACK":true,"URG":false,"ECE":false,"CWR":false,"NS":false}}
 ```
 
-## Build
+### View elastic stack on Docker example
 
-install pfring(libpfring)
+1. install docker
+2. install docker-compose
+3. run docker
 
 ```sh
-go get "github.com/google/gopacket"
-go get "gopkg.in/yaml.v2"
-go build gonsan.go
+$ cd exapmle-docker-elastic
+$ docker-compospe up -d
+$ sudo gonsan -i eth0 -s 10 > logstash.txt
 ```
+
+view kibana http://localhost:5601
 
 ## Configuration
 
-#### Argument
+### Argument
 
 - **-i**
   - interface
@@ -38,7 +54,7 @@ go build gonsan.go
   - `gonsan -s 100` -> sampling 1/100
   - default 1
 
-#### config file
+### config file
 
 argument (-i, -s) overrides config.
 

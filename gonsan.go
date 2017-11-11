@@ -40,13 +40,13 @@ type packetInfo struct {
 	Length    int      `json:"length"`
 	SrcMac    string   `json:"src_mac"`
 	DstMac    string   `json:"dst_mac"`
-	SrcIP     string   `json:"src_ip"`
-	DstIP     string   `json:"dst_ip"`
-	SrcPort   int      `json:"src_port"`
-	DstPort   int      `json:"dst_port"`
+	SrcIP     string   `json:"src_ip ,omitempty"`
+	DstIP     string   `json:"dst_ip ,omitempty"`
+	SrcPort   int      `json:"src_port ,omitempty"`
+	DstPort   int      `json:"dst_port ,omitempty"`
 	Proto     string   `json:"proto"`
 	Seq       uint32   `json:"seq_num"`
-	TcpFlags  tcpFlags `json:"tcp_flags"`
+	TCPFlags  tcpFlags `json:"tcp_flags, ,omitempty"`
 }
 
 type tcpFlags struct {
@@ -93,15 +93,15 @@ func analyze(p *gopacket.Packet, ch *chan packetInfo) {
 			pInfo.SrcPort = int(tcp.SrcPort)
 			pInfo.DstPort = int(tcp.DstPort)
 			pInfo.Seq = tcp.Seq
-			pInfo.TcpFlags.FIN = tcp.FIN
-			pInfo.TcpFlags.SYN = tcp.SYN
-			pInfo.TcpFlags.RST = tcp.RST
-			pInfo.TcpFlags.PSH = tcp.PSH
-			pInfo.TcpFlags.ACK = tcp.ACK
-			pInfo.TcpFlags.URG = tcp.URG
-			pInfo.TcpFlags.ECE = tcp.ECE
-			pInfo.TcpFlags.CWR = tcp.CWR
-			pInfo.TcpFlags.NS  = tcp.NS
+			pInfo.TCPFlags.FIN = tcp.FIN
+			pInfo.TCPFlags.SYN = tcp.SYN
+			pInfo.TCPFlags.RST = tcp.RST
+			pInfo.TCPFlags.PSH = tcp.PSH
+			pInfo.TCPFlags.ACK = tcp.ACK
+			pInfo.TCPFlags.URG = tcp.URG
+			pInfo.TCPFlags.ECE = tcp.ECE
+			pInfo.TCPFlags.CWR = tcp.CWR
+			pInfo.TCPFlags.NS = tcp.NS
 		case layers.LayerTypeUDP:
 			udp, _ := layer.(*layers.UDP)
 			pInfo.SrcPort = int(udp.SrcPort)
@@ -110,11 +110,6 @@ func analyze(p *gopacket.Packet, ch *chan packetInfo) {
 	}
 	*ch <- pInfo
 }
-
-// func calcTcpFlags(tcp ) int {
-// 	var flags int
-// 	return flags
-// }
 
 func view(p packetInfo) {
 	fmt.Println(p.String())
