@@ -1,0 +1,107 @@
+{
+  "template" : "gonsan-*",
+  "mappings" : {
+    "logs" : {
+      "properties" : {
+        "dst_ip" : {
+          "type" : "ip"
+        },
+        "dst_mac" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "dst_port" : {
+          "type" : "long"
+        },
+        "epoch_time" : {
+          "type" : "date",
+          "format": "epoch_second"
+        },
+        "host" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "length" : {
+          "type" : "long"
+        },
+        "proto" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "seq_num" : {
+          "type" : "long"
+        },
+        "src_ip" : {
+          "type" : "ip"
+        },
+        "src_mac" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+        "src_port" : {
+          "type" : "long"
+        },
+        "tcp_flags" : {
+          "properties" : {
+            "ACK" : {
+              "type" : "boolean"
+            },
+            "CWR" : {
+              "type" : "boolean"
+            },
+            "ECE" : {
+              "type" : "boolean"
+            },
+            "FIN" : {
+              "type" : "boolean"
+            },
+            "NS" : {
+              "type" : "boolean"
+            },
+            "PSH" : {
+              "type" : "boolean"
+            },
+            "RST" : {
+              "type" : "boolean"
+            },
+            "SYN" : {
+              "type" : "boolean"
+            },
+            "URG" : {
+              "type" : "boolean"
+            }
+          }
+        },
+        "time" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        }
+      }
+    }
+  }
+}
