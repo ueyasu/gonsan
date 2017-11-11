@@ -5,13 +5,14 @@ Gonsan is packet analyzer to output json.
 ## Getting Started
 
 1. Install [libpfring](https://github.com/ntop/PF_RING)
+1. Build
 1. Run `sudo ./gonsan -i eth0` (read eth0 interface)
 1. You can see json
 
 json example
 
 ```json
-{"time":"2017-11-09 00:35:09.32589 +0900 JST","epoch_time":1510155309,"length":179,"src_mac":"f8:63:3f:17:0b:7e","dst_mac":"f8:63:3f:7f:ff:fa","src_ip":"192.168.0.1","dst_ip":"192.168.0.2","src_port":52361,"dst_port":1900,"proto":"UDP","tcp_flags":0}
+{"time":"2017-11-11 16:28:34.966029 +0900 JST","epoch_time":1510385314,"length":248,"src_mac":"00:15:5d:00:07:00","dst_mac":"00:15:5d:00:07:01","src_ip":"192.168.0.1","dst_ip":"192.168.0.2","src_port":42086,"dst_port":443,"proto":"TCP","seq_num":1709215608,"tcp_flags":{"FIN":false,"SYN":false,"RST":false,"PSH":true,"ACK":true,"URG":false,"ECE":false,"CWR":false,"NS":false}}
 ```
 
 ## Build
@@ -61,28 +62,45 @@ gonsan -f config.yml -i eth0 -s 10
 ## Json
 
 - time
-  - string
+  - *string*
   - example - `"2017-11-09 00:35:09.32589 +0900 JST"`
 - epoch_time
-  - int
+  - *int*
 - length
-  - int
+  - *int*
 - src_mac
-  - string
+  - *string*
 - dst_mac
-  - string
+  - *string*
 - src_ip
-  - string
+  - *string*
 - dst_ip
-  - string
+  - *string*
 - src_port
-  - int
+  - *int*
 - dst_port:
-  - int
+  - *int*
 - proto
-  - string
+  - *string*
 - tcp_flags
-  - *not impremented*
+  - FIN
+    - *bool*
+  - SYN
+    - *bool*
+  - RST
+    - *bool*
+  - PSH
+    - *bool*
+  - ACK
+    - *bool*
+  - URG
+    - *bool*
+  - ECE
+    - *bool*
+  - CWR
+    - *bool*
+  - NS
+    - *bool*
 
 ## What you really needs
 

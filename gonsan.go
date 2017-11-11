@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"strconv"
 
 	"encoding/json"
 
@@ -36,17 +35,30 @@ type outputConfig struct {
 }
 
 type packetInfo struct {
-	Time      string `json:"time"`
-	Epochtime int64  `json:"epoch_time"`
-	Length    int    `json:"length"`
-	SrcMac    string `json:"src_mac"`
-	DstMac    string `json:"dst_mac"`
-	SrcIP     string `json:"src_ip"`
-	DstIP     string `json:"dst_ip"`
-	SrcPort   int    `json:"src_port"`
-	DstPort   int    `json:"dst_port"`
-	Proto     string `json:"proto"`
-	TcpFlags  int    `json:"tcp_flags"`
+	Time      string   `json:"time"`
+	Epochtime int64    `json:"epoch_time"`
+	Length    int      `json:"length"`
+	SrcMac    string   `json:"src_mac"`
+	DstMac    string   `json:"dst_mac"`
+	SrcIP     string   `json:"src_ip"`
+	DstIP     string   `json:"dst_ip"`
+	SrcPort   int      `json:"src_port"`
+	DstPort   int      `json:"dst_port"`
+	Proto     string   `json:"proto"`
+	Seq       uint32   `json:"seq_num"`
+	TcpFlags  tcpFlags `json:"tcp_flags"`
+}
+
+type tcpFlags struct {
+	FIN bool
+	SYN bool
+	RST bool
+	PSH bool
+	ACK bool
+	URG bool
+	ECE bool
+	CWR bool
+	NS  bool
 }
 
 func (p *packetInfo) String() string {
@@ -70,20 +82,30 @@ func analyze(p *gopacket.Packet, ch *chan packetInfo) {
 		case layers.LayerTypeIPv4:
 			fallthrough
 		case layers.LayerTypeIPv6:
-			if net := (*p).NetworkLayer(); net != nil {
-				pInfo.SrcIP = net.NetworkFlow().Src().String()
-				pInfo.DstIP = net.NetworkFlow().Dst().String()
+			ip, _ := layer.(*layers.IPv4)
+			if pInfo.SrcIP == "" {
+				pInfo.SrcIP = ip.SrcIP.String()
+				pInfo.DstIP = ip.DstIP.String()
+				pInfo.Proto = ip.Protocol.String()
 			}
 		case layers.LayerTypeTCP:
-			fallthrough
+			tcp, _ := layer.(*layers.TCP)
+			pInfo.SrcPort = int(tcp.SrcPort)
+			pInfo.DstPort = int(tcp.DstPort)
+			pInfo.Seq = tcp.Seq
+			pInfo.TcpFlags.FIN = tcp.FIN
+			pInfo.TcpFlags.SYN = tcp.SYN
+			pInfo.TcpFlags.RST = tcp.RST
+			pInfo.TcpFlags.PSH = tcp.PSH
+			pInfo.TcpFlags.ACK = tcp.ACK
+			pInfo.TcpFlags.URG = tcp.URG
+			pInfo.TcpFlags.ECE = tcp.ECE
+			pInfo.TcpFlags.CWR = tcp.CWR
+			pInfo.TcpFlags.NS  = tcp.NS
 		case layers.LayerTypeUDP:
-			pInfo.Proto = layer.LayerType().String()
-			pInfo.SrcPort, _ = strconv.Atoi((*p).TransportLayer().TransportFlow().Src().String())
-			pInfo.DstPort, _ = strconv.Atoi((*p).TransportLayer().TransportFlow().Dst().String())
-		default:
-			if proto := layer.LayerType().String(); proto != "Payload" {
-				pInfo.Proto = proto
-			}
+			udp, _ := layer.(*layers.UDP)
+			pInfo.SrcPort = int(udp.SrcPort)
+			pInfo.DstPort = int(udp.DstPort)
 		}
 	}
 	*ch <- pInfo
