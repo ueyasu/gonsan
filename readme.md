@@ -19,6 +19,8 @@ json example
 install pfring(libpfring)
 
 ```sh
+go get "github.com/google/gopacket"
+go get "gopkg.in/yaml.v2"
 go build gonsan.go
 ```
 
