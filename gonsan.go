@@ -4,35 +4,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"runtime"
+	"sync"
 
 	"encoding/json"
 
-	"gopkg.in/yaml.v2"
-
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pfring"
+	"github.com/google/gopacket/pcap"
 )
-
-type config struct {
-	Input  inputConfig  `yaml:"input"`
-	Filter filterConfig `yaml:"filter"`
-	Output outputConfig `yaml:"output"`
-}
-
-type inputConfig struct {
-	Device string `yaml:"device"`
-}
-
-type filterConfig struct {
-	BpfFilter    string `yaml:"bpf_filter"`
-	SamplingRate int    `yaml:"sampling_rate"`
-}
-
-type outputConfig struct {
-}
 
 type packetInfo struct {
 	Time      string   `json:"time"`
@@ -59,6 +40,38 @@ type tcpFlags struct {
 	ECE bool
 	CWR bool
 	NS  bool
+	BIT uint32
+}
+
+func (f *tcpFlags) calcBit() {
+	f.BIT = 0
+	if f.FIN == true {
+		f.BIT = f.BIT | 1
+	}
+	if f.SYN == true {
+		f.BIT = f.BIT | 2
+	}
+	if f.RST == true {
+		f.BIT = f.BIT | 4
+	}
+	if f.PSH == true {
+		f.BIT = f.BIT | 8
+	}
+	if f.ACK == true {
+		f.BIT = f.BIT | 16
+	}
+	if f.URG == true {
+		f.BIT = f.BIT | 32
+	}
+	if f.ECE == true {
+		f.BIT = f.BIT | 64
+	}
+	if f.CWR == true {
+		f.BIT = f.BIT | 128
+	}
+	if f.NS == true {
+		f.BIT = f.BIT | 256
+	}
 }
 
 func (p *packetInfo) String() string {
@@ -102,6 +115,7 @@ func analyze(p *gopacket.Packet, ch *chan packetInfo) {
 			pInfo.TCPFlags.ECE = tcp.ECE
 			pInfo.TCPFlags.CWR = tcp.CWR
 			pInfo.TCPFlags.NS = tcp.NS
+			pInfo.TCPFlags.calcBit()
 		case layers.LayerTypeUDP:
 			udp, _ := layer.(*layers.UDP)
 			pInfo.SrcPort = int(udp.SrcPort)
@@ -115,56 +129,44 @@ func view(p packetInfo) {
 	fmt.Println(p.String())
 }
 
-func openConfig(path *string) (config, error) {
-	var c config
-	buf, err := ioutil.ReadFile(*path)
-	if err != nil {
-		return c, err
-	}
-	err = yaml.Unmarshal(buf, &c)
-	return c, err
-}
-
 func main() {
-	configPath := flag.String("f", "", "config file")
-	device := flag.String("i", "", "interface")
+	pcapFile := flag.String("r", "", "read pcap")
 	samplingRate := flag.Int("s", 1, "sampling rate")
 	flag.Parse()
 
 	var (
-		conf config
-		err  error
+		handle *pcap.Handle
+		err    error
 	)
-	if *configPath != "" {
-		if conf, err = openConfig(configPath); err != nil {
-			log.Fatal(err)
-		}
-	}
-	if *device != "" {
-		conf.Input.Device = *device
-	}
-	if conf.Filter.SamplingRate < *samplingRate {
-		conf.Filter.SamplingRate = *samplingRate
-	}
-	if conf.Input.Device == "" {
-		log.Fatal(errors.New("set interface"))
+
+	if *pcapFile == "" {
+		log.Fatal(errors.New("set read pcap"))
 	}
 
-	if ring, err := pfring.NewRing(conf.Input.Device, 65536, pfring.FlagPromisc); err != nil {
-		log.Println("Infomarion: check Permission")
+	handle, err = pcap.OpenOffline(*pcapFile)
+	if err != nil {
 		log.Fatal(err)
-	} else if err := ring.SetBPFFilter(conf.Filter.BpfFilter); err != nil {
-		log.Fatal(err)
-	} else if err := ring.SetSamplingRate(*samplingRate); err != nil {
-		log.Fatal(err)
-	} else if err := ring.Enable(); err != nil {
-		log.Fatal(err)
-	} else {
-		packetSource := gopacket.NewPacketSource(ring, layers.LinkTypeEthernet)
-		ch := make(chan packetInfo)
-		for packet := range packetSource.Packets() {
-			go analyze(&packet, &ch)
-			go view(<-ch)
+	}
+	defer handle.Close()
+
+	packetSource := gopacket.NewPacketSource(handle, layers.LinkTypeEthernet)
+	cpus := runtime.NumCPU()
+	ch := make(chan packetInfo, cpus)
+	wg := &sync.WaitGroup{}
+	sampleCounter := *samplingRate
+
+	for packet := range packetSource.Packets() {
+		if sampleCounter == *samplingRate {
+			wg.Add(1)
+			go func(packet gopacket.Packet, ch chan packetInfo) {
+				defer wg.Done()
+				analyze(&packet, &ch)
+				view(<-ch)
+			}(packet, ch)
+			sampleCounter = 1
+		} else {
+			sampleCounter++
 		}
 	}
+	wg.Wait()
 }
