@@ -26,8 +26,10 @@ type packetInfo struct {
 	SrcPort   int      `json:"src_port ,omitempty"`
 	DstPort   int      `json:"dst_port ,omitempty"`
 	Proto     string   `json:"proto"`
-	Seq       uint32   `json:"seq_num"`
+	Seq       uint32   `json:"seq_num ,omitempt"`
 	TCPFlags  tcpFlags `json:"tcp_flags, ,omitempty"`
+	IcmpCode  int      `json:"icmp_code,omitempty"`
+	IcmpType  int      `json:"icmp_type,omitempty"`
 }
 
 type tcpFlags struct {
@@ -45,32 +47,32 @@ type tcpFlags struct {
 
 func (f *tcpFlags) calcBit() {
 	f.BIT = 0
-	if f.FIN == true {
-		f.BIT = f.BIT | 1
+	if f.FIN {
+		f.BIT |= 1
 	}
-	if f.SYN == true {
-		f.BIT = f.BIT | 2
+	if f.SYN {
+		f.BIT |= 2
 	}
-	if f.RST == true {
-		f.BIT = f.BIT | 4
+	if f.RST {
+		f.BIT |= 4
 	}
-	if f.PSH == true {
-		f.BIT = f.BIT | 8
+	if f.PSH {
+		f.BIT |= 8
 	}
-	if f.ACK == true {
-		f.BIT = f.BIT | 16
+	if f.ACK {
+		f.BIT |= 16
 	}
-	if f.URG == true {
-		f.BIT = f.BIT | 32
+	if f.URG {
+		f.BIT |= 32
 	}
-	if f.ECE == true {
-		f.BIT = f.BIT | 64
+	if f.ECE {
+		f.BIT |= 64
 	}
-	if f.CWR == true {
-		f.BIT = f.BIT | 128
+	if f.CWR {
+		f.BIT |= 128
 	}
-	if f.NS == true {
-		f.BIT = f.BIT | 256
+	if f.NS {
+		f.BIT |= 256
 	}
 }
 
@@ -93,14 +95,33 @@ func analyze(p *gopacket.Packet, ch *chan packetInfo) {
 	for _, layer := range (*p).Layers() {
 		switch layer.LayerType() {
 		case layers.LayerTypeIPv4:
-			fallthrough
-		case layers.LayerTypeIPv6:
 			ip, _ := layer.(*layers.IPv4)
 			if pInfo.SrcIP == "" {
 				pInfo.SrcIP = ip.SrcIP.String()
 				pInfo.DstIP = ip.DstIP.String()
 				pInfo.Proto = ip.Protocol.String()
 			}
+
+		case layers.LayerTypeIPv6:
+			ip, _ := layer.(*layers.IPv6)
+			pInfo.Proto = ip.LayerType().String()
+			if pInfo.SrcIP == "" {
+				pInfo.SrcIP = ip.SrcIP.String()
+				pInfo.DstIP = ip.DstIP.String()
+			}
+
+		case layers.LayerTypeICMPv4:
+			icmpv4 := layer.(*layers.ICMPv4)
+			pInfo.Proto = layer.LayerType().String()
+			pInfo.IcmpCode = int(icmpv4.TypeCode.Code())
+			pInfo.IcmpType = int(icmpv4.TypeCode.Type())
+
+		case layers.LayerTypeICMPv6:
+			icmpv4 := layer.(*layers.ICMPv6)
+			pInfo.Proto = layer.LayerType().String()
+			pInfo.IcmpCode = int(icmpv4.TypeCode.Code())
+			pInfo.IcmpType = int(icmpv4.TypeCode.Type())
+
 		case layers.LayerTypeTCP:
 			tcp, _ := layer.(*layers.TCP)
 			pInfo.SrcPort = int(tcp.SrcPort)
@@ -116,10 +137,16 @@ func analyze(p *gopacket.Packet, ch *chan packetInfo) {
 			pInfo.TCPFlags.CWR = tcp.CWR
 			pInfo.TCPFlags.NS = tcp.NS
 			pInfo.TCPFlags.calcBit()
+
 		case layers.LayerTypeUDP:
 			udp, _ := layer.(*layers.UDP)
 			pInfo.SrcPort = int(udp.SrcPort)
 			pInfo.DstPort = int(udp.DstPort)
+
+		default:
+			if pInfo.Proto == "" {
+				pInfo.Proto = layer.LayerType().String()
+			}
 		}
 	}
 	*ch <- pInfo
