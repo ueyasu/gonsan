@@ -1,16 +1,15 @@
 package main
 
 import (
-	"errors"
 	"flag"
-	"log"
+	"fmt"
 
 	"./analyze"
 )
 
 func main() {
-	pcapFile := flag.String("r", "", "read pcap")
-	ifname := flag.String("i", "", "read network interface name")
+	pcapFile := flag.String("r", "", "pcap file name")
+	ifname := flag.String("i", "", "network interface name")
 	samplingRate := flag.Int("s", 1, "sampling rate")
 	flag.Parse()
 
@@ -19,6 +18,7 @@ func main() {
 	} else if (*ifname != "") {
 		analyze.ReadIF(ifname, samplingRate)
 	} else {
-		log.Fatal(errors.New("set read pcap or read interface"))
+		fmt.Println("set read pcap or read interface")
+		flag.PrintDefaults()
 	}
 }

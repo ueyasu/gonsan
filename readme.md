@@ -28,11 +28,15 @@ json example
 ### Argument
 
 - **-r**
-  - read pcap file
+  - set pcap file name
+- **-i**
+  - set network interface name
 - **-s**
   - sampling rate
   - `gonsan -s 100` -> sampling 1/100
   - default 1
+
+require set `-r` or `-i` .  
 
 ## Json
 
@@ -79,8 +83,8 @@ json example
 
 ## What's purpose for?
 
-The goal is to sample a large pcap file and analyze it for IP addresses, ports and TCP flags.
-The sampling is a simple round robin, so it does not sample flow by flow.
+The goal is to sample a large pcap file and analyze it for IP addresses, ports and TCP flags.  
+The sampling is a simple round robin, so it does not sample flow by flow.  
 It is assumed to be used when TCP flow is not important (such as DDoS attack, SYN-Flood).
 
 ## What you really needs
