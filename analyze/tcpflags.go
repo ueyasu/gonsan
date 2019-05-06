@@ -1,4 +1,4 @@
-package main
+package analyze
 
 import "github.com/google/gopacket/layers"
 
@@ -30,31 +30,31 @@ func (f *tcpFlags) setFlags(tcp *layers.TCP) {
 
 func (f *tcpFlags) calcBit() {
 	f.BIT = 0
-	if f.FIN == true {
-		f.BIT = f.BIT | 1
+	if f.FIN {
+		f.BIT |= 1
 	}
-	if f.SYN == true {
-		f.BIT = f.BIT | 2
+	if f.SYN {
+		f.BIT |= 2
 	}
-	if f.RST == true {
-		f.BIT = f.BIT | 4
+	if f.RST {
+		f.BIT |= 4
 	}
-	if f.PSH == true {
-		f.BIT = f.BIT | 8
+	if f.PSH {
+		f.BIT |= 8
 	}
-	if f.ACK == true {
-		f.BIT = f.BIT | 16
+	if f.ACK {
+		f.BIT |= 16
 	}
-	if f.URG == true {
-		f.BIT = f.BIT | 32
+	if f.URG {
+		f.BIT |= 32
 	}
-	if f.ECE == true {
-		f.BIT = f.BIT | 64
+	if f.ECE {
+		f.BIT |= 64
 	}
-	if f.CWR == true {
-		f.BIT = f.BIT | 128
+	if f.CWR {
+		f.BIT |= 128
 	}
-	if f.NS == true {
-		f.BIT = f.BIT | 256
+	if f.NS {
+		f.BIT |= 256
 	}
 }
