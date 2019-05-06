@@ -11,6 +11,6 @@ get:
 	$(GO) get github.com/google/gopacket/layers
 
 build:
-    GO111MODULE=off
+	GO111MODULE=off
 	$(GO) build -ldflags '-w -s' -o $(NAME) -v
 
